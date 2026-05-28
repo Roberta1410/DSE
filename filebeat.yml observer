@@ -1,0 +1,42 @@
+filebeat.inputs:
+  - type: filestream
+    id: geth-json-logs
+    enabled: true
+    paths:
+      - /var/log/geth/geth.log
+
+    parsers:
+      - ndjson:
+          target: ""
+          overwrite_keys: true
+          add_error_key: true
+
+    fields:
+      service.name: geth
+      service.type: ethereum-execution-client
+      environment: poc
+      node.name: elastic-data-02
+      blockchain.network_id: "${NETWORKID:unknown}"
+
+    fields_under_root: true
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+
+setup.kibana:
+  host: "192.168.67.107:5601"
+
+setup.template.name: "geth-logs"
+setup.template.pattern: "geth-logs-*"
+
+setup.ilm.enabled: false
+
+output.elasticsearch:
+  hosts: ["https://192.168.67.107:9200"]
+  username: "elastic"
+  password: "paroladseproject"
+  index: "geth-logs-%{+yyyy.MM.dd}"
+  ssl:
+    certificate_authorities:
+      - "/etc/filebeat/certs/http_ca.crt"
